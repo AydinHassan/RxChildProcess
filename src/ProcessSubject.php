@@ -20,7 +20,13 @@ class ProcessSubject extends Subject
     private $env;
     private $options;
 
-    public function __construct(string $cmd, ObserverInterface $errorObserver = null, string $cwd = null, array $env = null, array $options = [], LoopInterface $loop = null)
+
+    /**
+     * @var int
+     */
+    private $interval;
+
+    public function __construct(string $cmd, ObserverInterface $errorObserver = null, string $cwd = null, array $env = null, array $options = [], LoopInterface $loop = null, int $interval = null)
     {
         $this->cmd           = $cmd;
         $this->cwd           = $cwd;
@@ -28,6 +34,7 @@ class ProcessSubject extends Subject
         $this->options       = $options;
         $this->loop          = $loop ?: \EventLoop\getLoop();
         $this->errorObserver = $errorObserver ?: new Subject();
+        $this->interval      = $interval ?: 0.1;
     }
 
     public function onNext($data)
@@ -54,7 +61,7 @@ class ProcessSubject extends Subject
             }
 
             $this->process = $process = new Process($this->cmd, $this->cwd, $this->env, $this->options);
-            $this->process->start($this->loop);
+            $this->process->start($this->loop, $this->interval);
 
             $this->process->stdout->on('data', function ($output) {
                 parent::onNext($output);
